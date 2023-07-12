@@ -571,8 +571,12 @@ video {
   --tw-backdrop-sepia:  ;
 }
 
-.ml-2 {
-  margin-left: 0.5rem;
+.mb-2 {
+  margin-bottom: 0.5rem;
+}
+
+.ml-8 {
+  margin-left: 2rem;
 }
 
 .flex {
@@ -587,8 +591,8 @@ video {
   height: 100vh;
 }
 
-.max-h-screen {
-  max-height: 100vh;
+.w-full {
+  width: 100%;
 }
 
 .basis-2\/6 {
@@ -615,12 +619,14 @@ video {
   flex-direction: row;
 }
 
-.place-content-center {
-  place-content: center;
-}
-
 .justify-center {
   justify-content: center;
+}
+
+.space-y-1 > :not([hidden]) ~ :not([hidden]) {
+  --tw-space-y-reverse: 0;
+  margin-top: calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));
+  margin-bottom: calc(0.25rem * var(--tw-space-y-reverse));
 }
 
 .overflow-auto {
@@ -635,6 +641,10 @@ video {
   border-width: 1px;
 }
 
+.border-b-2 {
+  border-bottom-width: 2px;
+}
+
 .border-l {
   border-left-width: 1px;
 }
@@ -645,6 +655,11 @@ video {
 
 .border-t {
   border-top-width: 1px;
+}
+
+.border-gray-100 {
+  --tw-border-opacity: 1;
+  border-color: rgb(243 244 246 / var(--tw-border-opacity));
 }
 
 .border-slate-300 {
@@ -662,13 +677,58 @@ video {
   border-right-color: rgb(203 213 225 / var(--tw-border-opacity));
 }
 
+.p-2 {
+  padding: 0.5rem;
+}
+
+.pr-8 {
+  padding-right: 2rem;
+}
+
 .text-center {
   text-align: center;
+}
+
+.text-base {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
 }
 
 .text-xl {
   font-size: 1.25rem;
   line-height: 1.75rem;
+}
+
+.text-xs {
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.tracking-wide {
+  letter-spacing: 0.025em;
+}
+
+.text-gray-500 {
+  --tw-text-opacity: 1;
+  color: rgb(107 114 128 / var(--tw-text-opacity));
+}
+
+.text-gray-700 {
+  --tw-text-opacity: 1;
+  color: rgb(55 65 81 / var(--tw-text-opacity));
 }
 
 .filter {
@@ -688,4 +748,24 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.hover\:bg-gray-200:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(229 231 235 / var(--tw-bg-opacity));
+}
+
+.hover\:bg-sky-500:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(14 165 233 / var(--tw-bg-opacity));
+}
+
+@media (min-width: 640px) {
+  .sm\:items-center {
+    align-items: center;
+  }
+
+  .sm\:pl-4 {
+    padding-left: 1rem;
+  }
 }
