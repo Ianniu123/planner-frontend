@@ -10,14 +10,15 @@ import MuiAlert from '@mui/material/Alert';
 import Dial from './components/dialog'
 import CourseItem from './components/listitem'
 
-const Header = () => {
+const Header = ({ switchTerm, term }) => {
   return (
     <div className="flex flex-row overflow-auto">
-      <div className="border border-slate-950 basis-4/6">
+      <div className="border flex border-slate-950 basis-4/6">
+        <button onClick={switchTerm} className="basis">switch term</button>
         <h1 className="text-center text-xl">Timetable</h1>
       </div>
       <div className="border border-slate-950 basis-2/6">
-        <h1 className="text-center text-xl">Course Information</h1>
+        <h1 className="text-center text-xl">Course Information: {term}</h1>
       </div>
     </div>
   )
@@ -118,10 +119,6 @@ const Table = ({ selected, handleClick, handleRemove }) => {
 }
 
 const Course = ({ course, handleAdd }) => {
-  const { subject, title, credits, schedule, instructor, days, start_time, end_time } = course;
-
-  const time = `${start_time}-${end_time}`;
-
   return (
     <div className="border-b-2 border-gray-100 p-2 mb-2 hover:bg-gray-200">
       <CourseItem handleAdd={handleAdd} course={course} />
@@ -151,16 +148,43 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 function App() {
   const [courses, setCourses] = useState([]) // Array to store all courses
   const initArray = Array(28).fill(Array(5).fill())
-  const [selected, setSelected] = useState(initArray)
+  const [selected, setSelected] = useState(initArray) //keeps track of all the courses in the selected time table
   const [filter, setFilter] = useState(courses)
   const [term, setTerm] = useState("fall2023")
   const [myCourses, setMyCourses] = useState([])
   const [openDialog, setOpenDialog] = useState(false) //tracks whether dialog box is openned
   const [openNotif, setOpenNotif] = useState(false)
+  const [current, setCurrent] = useState([]) //keeps track of the current cell being selected [time, day]
+
+  let success = true
+
+  const switchTerm = () => {
+    const newTerm = term === "fall2023" ? "winter2024": "fall2023"
+    setTerm(newTerm)
+    try {
+      service.get(term).then(response => {
+        setCourses(response.data);
+        setFilter(response.data);
+        setSelected(initArray)
+        setMyCourses([])
+        setOpenDialog(false)
+        setOpenNotif(false)
+        setCurrent([])
+      })
+    } catch (error) {
+      console.log('server error');
+    }
+  }
 
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
+
+  const handleAcceptDialog =() => {
+    //handles saying yes to repalce the existing course
+
+    setOpenDialog(false)
+  }
 
   const handleCloseNotif = (event, reason) => {
     if (reason === 'clickaway') {
@@ -171,22 +195,23 @@ function App() {
   }
 
   const updateValue = (i, j, newValue) => {
-    var success = true
     setSelected(selected => {
       const newArray = selected.concat()
       newArray[i] = newArray[i].concat()
+
       if (newArray[i][j] !== undefined) {
         setOpenDialog(true)
+        success = false
+        return newArray
         // prevents the rest from executing
       }
+
+      success = true
       newArray[i][j] = newValue
       return newArray
     })
+
     return success
-  }
-
-  const showMore = () => {
-
   }
 
   const handleRemove = (course) => {
@@ -215,7 +240,6 @@ function App() {
     const start = parseInt(start_time.replace(':', ''))
     const end = parseInt(end_time.replace(':', ''))
     const days = day.split(' ', 2)
-    let success = true;
 
     let start_idx = -1
     let end_idx = -1
@@ -239,6 +263,7 @@ function App() {
     days.forEach(day => {
       for (let i = start_idx; i <= end_idx; i++) {
         if (updateValue(i, week.indexOf(day), course) === false) {
+          console.log("failed to add course")
           return;
         }
       }
@@ -246,7 +271,6 @@ function App() {
 
     if (success) {
       const newMyCourses = myCourses.concat(course)
-
       setFilter(filter.filter(c => course.id !== c.id));
       setMyCourses(newMyCourses)
       setOpenNotif(true)
@@ -255,6 +279,14 @@ function App() {
   }
 
   const handleClick = (time, day) => {
+    if (time === current[0] && day === current[1]) {
+      setFilter(courses.concat())
+      const newCurrent = [undefined, undefined]
+      setCurrent(newCurrent)
+      return
+    }
+
+
     const newList = courses.filter(course => {
       const lower = parseInt(time.replace(':', '')); //lower bound
       const upper = lower % 100 === 0 ? lower + 30 : lower + 70;
@@ -262,6 +294,9 @@ function App() {
       const end = parseInt(course.end_time.replace(':', ''));
       return course.days.includes(day) && start >= lower && start <= upper && !myCourses.includes(course);
     });
+
+    const newCurrent = [time, day]
+    setCurrent(newCurrent)
     setFilter(newList);
 
   }
@@ -283,13 +318,13 @@ function App() {
 
   return (
     <div className="justify-center">
-      <Header />
+      <Header switchTerm={switchTerm} term={term} />
       <div className="flex w-full">
         <Table selected={selected} handleClick={handleClick} handleRemove={handleRemove} />
 
         <Display courses={filter} handleAdd={handleAdd} />
 
-        <Dial openDialog={openDialog} handleCloseDialog={handleCloseDialog} />
+        <Dial openDialog={openDialog} handleCloseDialog={handleCloseDialog} handleAcceptDialog={handleAcceptDialog} />
 
         <Snackbar open={openNotif} autoHideDuration={6000} onClose={handleCloseNotif}>
           <Alert onClose={handleCloseNotif} severity="success" sx={{ width: '100%' }}>

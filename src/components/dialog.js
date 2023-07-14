@@ -11,7 +11,7 @@ const Transition = React.forwardRef(function Transition(props, ref) {
     return <Slide direction="up" ref={ref} {...props} />;
   });
 
-const Dial = ({openDialog, handleCloseDialog}) => {
+const Dial = ({openDialog, handleCloseDialog, handleAcceptDialog}) => {
     return (
         <div>
             <Dialog
@@ -29,7 +29,7 @@ const Dial = ({openDialog, handleCloseDialog}) => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleCloseDialog}>No</Button>
-                    <Button onClick={handleCloseDialog}>Yes</Button>
+                    <Button onClick={handleAcceptDialog}>Yes</Button>
                 </DialogActions>
             </Dialog>
         </div>
