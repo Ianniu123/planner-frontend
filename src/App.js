@@ -1,140 +1,21 @@
 import { useState, useEffect } from 'react'
 import service from './services/courses'
 import * as React from 'react';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import IconButton from '@mui/material/IconButton';
-import ClearIcon from '@mui/icons-material/Clear';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import Dial from './components/dialog'
-import CourseItem from './components/listitem'
+import Table from './components/table'
+import Display from './components/display'
 
-const Header = ({ switchTerm, term }) => {
+const Header = ({ term }) => {
   return (
     <div className="flex flex-row overflow-auto">
-      <div className="border flex border-slate-950 basis-4/6">
-        <button onClick={switchTerm} className="basis">switch term</button>
+      <div className="border border-slate-950 basis-4/6">
         <h1 className="text-center text-xl">Timetable</h1>
       </div>
       <div className="border border-slate-950 basis-2/6">
         <h1 className="text-center text-xl">Course Information: {term}</h1>
       </div>
-    </div>
-  )
-}
-
-const Cell = ({ time, day, course, handleClick, handleRemove}) => {
-  if (course !== undefined) {
-    return (
-      <th className="border-slate-300 border hover:bg-sky-500 ">
-        <ListItem
-          secondaryAction={
-            <IconButton onClick={() => handleRemove(course)} edge="end" aria-label="delete">
-              <ClearIcon fontSize="small" />
-            </IconButton>
-          }
-        >
-          <ListItemText onClick={() => handleClick(time, day)} primaryTypographyProps={{fontSize: '14px'}}  primary={course.subject} className="cursor-pointer" />
-        </ListItem>
-      </th>
-    )
-  } else {
-    return (
-      <th className="border-slate-300 border hover:bg-sky-500">
-        <ListItem>
-          <ListItemText onClick={() => handleClick(time, day)} primaryTypographyProps={{fontSize: '14px'}}  primary={'\u00A0'} className="cursor-pointer" />
-        </ListItem>
-      </th>
-    )
-  }
-}
-
-const Slot = ({ time }) => {
-  let t = String(time)
-  if (t.substring(t.indexOf(':') + 1) === "30") {
-    return (
-      <th className="border-r border-r-slate-300">&nbsp;</th>
-    )
-  } else {
-    return (
-      <th className="border-l border-r border-t border-slate-300">{time}</th>
-    )
-  }
-}
-
-const Row = ({ row, time, handleClick, handleRemove }) => {
-  const days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
-  let counter = -1
-  return (
-    <tr>
-      <Slot key={time} time={time} />
-      <th className="border-slate-300 border"></th>
-      {row.map(cell => {
-        counter += 1
-        return (
-          <Cell key={counter} day={days[counter]} time={time} course={cell} handleClick={handleClick} handleRemove={handleRemove} />
-        )
-      })}
-      <th className="border-slate-300 border"></th>
-    </tr>
-  )
-}
-
-const Table = ({ selected, handleClick, handleRemove }) => {
-  const times = [
-    "7:00", "7:30", "8:00", "8:30", "9:00", "9:30", "10:00", "10:30", "11:00",
-    "11:30", "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-    "16:00", "16:30", "17:00", "17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30"
-  ]
-  let idx = -1
-  let counter = 100
-
-  return (
-    <table className="border-collapse basis-4/6 table-auto h-screen w-full">
-      <thead>
-        <tr className="border border-slate-300">
-          <th width="9%"></th>
-          <th width="13%">Sunday</th>
-          <th width="13%">Monday</th>
-          <th width="13%">Tuesday</th>
-          <th width="13%">Wednesday</th>
-          <th width="13%">Thursday</th>
-          <th width="13%">Friday</th>
-          <th width="13%">Saturday</th>
-        </tr>
-      </thead>
-
-      <tbody className="border border-slate-300">
-        {selected.map((row, index) => {
-          idx += 1
-          counter += 1
-          return (
-            <Row key={counter} row={row} time={times[idx]} handleClick={handleClick} handleRemove={handleRemove} />
-          )
-        })}
-      </tbody>
-    </table>
-  )
-}
-
-const Course = ({ course, handleAdd }) => {
-  return (
-    <div className="border-b-2 border-gray-100 p-2 mb-2 hover:bg-gray-200">
-      <CourseItem handleAdd={handleAdd} course={course} />
-    </div> 
-  )
-}
-
-const Display = ({ courses, handleAdd }) => {
-  return (
-    <div className="border basis-2/6 p-2 border-slate-950 overflow-scroll h-screen">
-      
-      {courses.map(course => {
-        return (
-          <Course key={course.subject} course={course} handleAdd={handleAdd} />
-        )
-      })}
     </div>
   )
 }
@@ -152,23 +33,27 @@ function App() {
   const [filter, setFilter] = useState(courses)
   const [term, setTerm] = useState("fall2023")
   const [myCourses, setMyCourses] = useState([])
-  const [openDialog, setOpenDialog] = useState(false) //tracks whether dialog box is openned
-  const [openNotif, setOpenNotif] = useState(false)
+  //const [openDialog, setOpenDialog] = useState(false) //tracks whether dialog box is openned
+  const [openSuccess, setOpenSuccess] = useState(false)
+  const [openFail, setOpenFail] = useState(false)
+  const [openSwitch, setOpenSwitch] = useState(false)
   const [current, setCurrent] = useState([]) //keeps track of the current cell being selected [time, day]
-
+  const [value, setValue] = useState('one');
   let success = true
+
 
   const switchTerm = () => {
     const newTerm = term === "fall2023" ? "winter2024": "fall2023"
     setTerm(newTerm)
+    setOpenSwitch(true)
     try {
       service.get(term).then(response => {
         setCourses(response.data);
         setFilter(response.data);
         setSelected(initArray)
         setMyCourses([])
-        setOpenDialog(false)
-        setOpenNotif(false)
+        //setOpenDialog(false)
+        setOpenSuccess(false)
         setCurrent([])
       })
     } catch (error) {
@@ -176,22 +61,41 @@ function App() {
     }
   }
 
-  const handleCloseDialog = () => {
-    setOpenDialog(false);
+  const handleChange = (event, newValue) => {
+    if (newValue === 'one') {
+      setFilter(courses.filter(course => {
+        return myCourses.includes(course) === false
+      }))
+    } else {
+      setFilter(myCourses.concat())
+    }
+
+    setValue(newValue);
   };
 
-  const handleAcceptDialog =() => {
-    //handles saying yes to repalce the existing course
 
-    setOpenDialog(false)
-  }
-
-  const handleCloseNotif = (event, reason) => {
+  const handleCloseSuccess = (event, reason) => {
     if (reason === 'clickaway') {
       return;
     }
 
-    setOpenNotif(false)
+    setOpenSuccess(false)
+  }
+
+  const handleCloseFail = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpenFail(false)
+  }
+
+  const handleCloseSwitch = (event, reason) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
+    setOpenSwitch(false)
   }
 
   const updateValue = (i, j, newValue) => {
@@ -200,15 +104,13 @@ function App() {
       newArray[i] = newArray[i].concat()
 
       if (newArray[i][j] !== undefined) {
-        setOpenDialog(true)
+        setOpenFail(true)
         success = false
         return newArray
-        // prevents the rest from executing
+      } else {
+        newArray[i][j] = newValue
+        return newArray
       }
-
-      success = true
-      newArray[i][j] = newValue
-      return newArray
     })
 
     return success
@@ -225,7 +127,6 @@ function App() {
     )
     
     //fix filter after removing course from table
-
     setSelected(newSelected)
     setMyCourses(newMyCourses)
   }
@@ -273,7 +174,7 @@ function App() {
       const newMyCourses = myCourses.concat(course)
       setFilter(filter.filter(c => course.id !== c.id));
       setMyCourses(newMyCourses)
-      setOpenNotif(true)
+      setOpenSuccess(true)
     }
 
   }
@@ -318,17 +219,27 @@ function App() {
 
   return (
     <div className="justify-center">
-      <Header switchTerm={switchTerm} term={term} />
+      <Header term={term} />
       <div className="flex w-full">
         <Table selected={selected} handleClick={handleClick} handleRemove={handleRemove} />
 
-        <Display courses={filter} handleAdd={handleAdd} />
+        <Display courses={filter} handleAdd={handleAdd} value={value} handleChange={handleChange} switchTerm={switchTerm} />
 
-        <Dial openDialog={openDialog} handleCloseDialog={handleCloseDialog} handleAcceptDialog={handleAcceptDialog} />
-
-        <Snackbar open={openNotif} autoHideDuration={6000} onClose={handleCloseNotif}>
-          <Alert onClose={handleCloseNotif} severity="success" sx={{ width: '100%' }}>
+        <Snackbar open={openSuccess} autoHideDuration={6000} onClose={handleCloseSuccess}>
+          <Alert onClose={handleCloseSuccess} severity="success" sx={{ width: '100%' }}>
             Successfully added the course!
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={openFail} autoHideDuration={6000} onClose={handleCloseFail}>
+          <Alert onClose={handleCloseFail} severity="error" sx={{ width: '100%' }}>
+            A course already exists in this slot, please remove the existing course before adding a new one!
+          </Alert>
+        </Snackbar>
+
+        <Snackbar open={openSwitch} autoHideDuration={6000} onClose={handleCloseSwitch}>
+          <Alert onClose={handleCloseSwitch} severity="success" sx={{ width: '100%' }}>
+            switched to term {term}
           </Alert>
         </Snackbar>
 
